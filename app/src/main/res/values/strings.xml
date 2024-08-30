@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Audio Player</string>
+    <string name="back_button_text">Back</string>
+    <string name="play_button_text">Play</string>
+    <string name="forward_button_text">Forward</string>
+    <string name="song_title_text">Song Title</string>
+    <string name="song_artist_text">Artist Name</string>
+    <string name="current_time_text">Current Time</string>
+    <string name="total_time_text">Total Time</string>
+    <string name="image_cover_text">Image Cover</string>
+    <string name="select_file_text">Select File</string>
+</resources>
