@@ -107,6 +107,14 @@ public class MainActivity extends AppCompatActivity
             mediaPlayer.seekTo(0);
         });
 
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        int savedPostion = prefs.getInt(KEY_POSITION, 0);
+
+        if(mediaPlayer != null)
+        {
+            mediaPlayer.seekTo(savedPostion);
+        }
+
         //picks file for playback
         filePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -189,14 +197,6 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
-
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        int savedPostion = prefs.getInt(KEY_POSITION, 0);
-
-        if(mediaPlayer != null)
-        {
-            mediaPlayer.seekTo(savedPostion);
-        }
     }
 
     private void savePlaybackPosition(Uri uri) throws IOException {
@@ -357,13 +357,15 @@ public class MainActivity extends AppCompatActivity
             mediaPlayer.setDataSource(this, uri);
             mediaPlayer.prepare();
 
+            currentTime = 0;
+
             SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
             int savedPostion = prefs.getInt(KEY_POSITION, 0);
             if(savedPostion > 0 && "audiobook".equals(getAudioType(mediaUri)))
             {
-                mediaPlayer.seekTo(savedPostion);
+                currentTime = savedPostion;
             }
-
+            mediaPlayer.seekTo(currentTime);
             mediaPlayer.start();
             handlePlayBackSpeedChange(playbackSpeed);
             sbTime.setMax(mediaPlayer.getDuration());
