@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity
     private ImageView ivCover;
     private int currentTime;
 
+    private String currentAudioType = "";
+
     private Spinner spinnerPlaybackSpeed;
 
     Button btnPlay;
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity
     TextView tvArtist;
     TextView tvCurrentTime;
     TextView tvSongLength;
+    TextView tvMediaType;
 
     SeekBar sbTime;
 
@@ -71,6 +74,8 @@ public class MainActivity extends AppCompatActivity
             return insets;
         });
 
+
+
         Button btnFileSelect = findViewById(R.id.btnFileSelect);
         Button btnBack = findViewById(R.id.btnBack);
         Button btnForward = findViewById(R.id.btnForward);
@@ -83,6 +88,8 @@ public class MainActivity extends AppCompatActivity
         tvArtist = findViewById(R.id.tvArtist);
         tvCurrentTime = findViewById(R.id.tvCurrentTime);
         tvSongLength = findViewById(R.id.tvSongLength);
+
+        tvMediaType = findViewById(R.id.tvMediaType);
 
         ivCover = findViewById(R.id.ivCover);
 
@@ -97,14 +104,11 @@ public class MainActivity extends AppCompatActivity
         });
 
         btnForward.setOnClickListener(v -> {
-
+            handleButtonForward();
         });
 
         btnBack.setOnClickListener(v -> {
-            if(mediaPlayer == null)
-                return;
-
-            mediaPlayer.seekTo(0);
+            handleButtonBack();
         });
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -125,8 +129,8 @@ public class MainActivity extends AppCompatActivity
                         if(data != null)
                         {
                             Uri uri = data.getData();
-                            handleAudioFile(uri);
                             mediaUri = uri;
+                            handleAudioFile(uri);
                         }
                     }
                 });
@@ -199,12 +203,71 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private void handleButtonBack()
+    {
+        if(mediaPlayer == null)
+            return;
+
+        handler.removeCallbacks(updatePositionRunnable);
+
+        int currentPos = mediaPlayer.getCurrentPosition();
+
+        if(currentAudioType.equals("audiobook"))
+        {
+            currentPos -= 15000;
+            mediaPlayer.seekTo(currentPos);
+        }
+        else
+        {
+            mediaPlayer.seekTo(0);
+        }
+
+        handler.post(updatePositionRunnable);
+
+        try {
+            savePlaybackPosition(mediaUri);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handleButtonForward()
+    {
+        if(mediaPlayer == null)
+            return;
+
+        handler.removeCallbacks(updatePositionRunnable);
+
+        int currentPos = mediaPlayer.getCurrentPosition();
+
+        if(currentAudioType.equals("audiobook"))
+        {
+            currentPos += 15000;
+            mediaPlayer.seekTo(currentPos);
+        }
+        else
+        {
+            mediaPlayer.seekTo(mediaPlayer.getDuration());
+            mediaPlayer.pause();
+        }
+
+        handler.post(updatePositionRunnable);
+
+        try {
+            savePlaybackPosition(mediaUri);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void savePlaybackPosition(Uri uri) throws IOException {
         if(mediaPlayer != null && "audiobook".equals(getAudioType(uri)))
         {
             int currentPosition = mediaPlayer.getCurrentPosition();
+            String key = generateUniqueKey(uri);
+
             SharedPreferences.Editor editor = getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit();
-            editor.putInt(KEY_POSITION, currentPosition);
+            editor.putInt(key, currentPosition);
             editor.apply();
         }
     }
@@ -359,18 +422,22 @@ public class MainActivity extends AppCompatActivity
 
             currentTime = 0;
 
-            SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-            int savedPostion = prefs.getInt(KEY_POSITION, 0);
+            int savedPostion = getSavedPlaybackPosition(uri);
+
             if(savedPostion > 0 && "audiobook".equals(getAudioType(mediaUri)))
             {
                 currentTime = savedPostion;
             }
+
             mediaPlayer.seekTo(currentTime);
             mediaPlayer.start();
             handlePlayBackSpeedChange(playbackSpeed);
             sbTime.setMax(mediaPlayer.getDuration());
             btnPlay.setText("Pause");
             handler.post(updatePositionRunnable);
+
+            tvMediaType.setText(getAudioType(mediaUri));
+            currentAudioType = getAudioType(mediaUri);
         }
         catch(IOException e)
         {
@@ -439,6 +506,18 @@ public class MainActivity extends AppCompatActivity
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    private int getSavedPlaybackPosition(Uri uri)
+    {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String key = generateUniqueKey(uri);
+        return prefs.getInt(key, 0);
+    }
+
+    private String generateUniqueKey(Uri uri)
+    {
+        return "audiobook_position_" + uri.toString().hashCode();
     }
 
     @Override
