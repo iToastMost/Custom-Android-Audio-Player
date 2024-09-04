@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity
     TextView tvArtist;
     TextView tvCurrentTime;
     TextView tvSongLength;
-    TextView tvMediaType;
 
     SeekBar sbTime;
 
@@ -88,8 +87,6 @@ public class MainActivity extends AppCompatActivity
         tvArtist = findViewById(R.id.tvArtist);
         tvCurrentTime = findViewById(R.id.tvCurrentTime);
         tvSongLength = findViewById(R.id.tvSongLength);
-
-        tvMediaType = findViewById(R.id.tvMediaType);
 
         ivCover = findViewById(R.id.ivCover);
 
@@ -435,8 +432,7 @@ public class MainActivity extends AppCompatActivity
             sbTime.setMax(mediaPlayer.getDuration());
             btnPlay.setText("Pause");
             handler.post(updatePositionRunnable);
-
-            tvMediaType.setText(getAudioType(mediaUri));
+            
             currentAudioType = getAudioType(mediaUri);
         }
         catch(IOException e)
