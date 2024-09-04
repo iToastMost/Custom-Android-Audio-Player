@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.audioplayer"
+    namespace = "com.CheekyLittleApps.audioplayer"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.audioplayer"
+        applicationId = "com.CheekyLittleApps.audioplayer"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
