@@ -29,6 +29,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.CheekyLittleApps.audioplayer.R;
+
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity
@@ -71,6 +73,149 @@ public class MainActivity extends AppCompatActivity
 
 
 
+//        Button btnFileSelect = findViewById(R.id.btnFileSelect);
+//        Button btnBack = findViewById(R.id.btnBack);
+//        Button btnForward = findViewById(R.id.btnForward);
+//
+//        spinnerPlaybackSpeed = findViewById(R.id.spinnerPlaybackSpeed);
+//
+//        btnPlay = findViewById(R.id.btnPlay);
+//
+//        tvTitle = findViewById(R.id.tvTitle);
+//        tvArtist = findViewById(R.id.tvArtist);
+//        tvCurrentTime = findViewById(R.id.tvCurrentTime);
+//        tvSongLength = findViewById(R.id.tvSongLength);
+//
+//        ivCover = findViewById(R.id.ivCover);
+//
+//        sbTime = findViewById(R.id.sbTime);
+//
+//        btnFileSelect.setOnClickListener(v -> {
+//            showFileChooser();
+//        });
+//
+//        btnPlay.setOnClickListener(v -> {
+//            handlePlayButton();
+//        });
+//
+//        btnForward.setOnClickListener(v -> {
+//            handleButtonForward();
+//        });
+//
+//        btnBack.setOnClickListener(v -> {
+//            handleButtonBack();
+//        });
+//
+//        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+//        int savedPostion = prefs.getInt(KEY_POSITION, 0);
+//
+//        if(mediaPlayer != null)
+//        {
+//            mediaPlayer.seekTo(savedPostion);
+//        }
+//
+//        //picks file for playback
+//        filePickerLauncher = registerForActivityResult(
+//                new ActivityResultContracts.StartActivityForResult(), result -> {
+//                    if(result.getResultCode() == Activity.RESULT_OK)
+//                    {
+//                        Intent data = result.getData();
+//
+//                        if(data != null)
+//                        {
+//                            Uri uri = data.getData();
+//                            mediaUri = uri;
+//                            handleAudioFile(uri);
+//                        }
+//                    }
+//                });
+//
+//        //Seekbar change listener, picks correct spot of audio based on user input
+//        sbTime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+//
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//                handler.removeCallbacks(updatePositionRunnable);
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//                if(mediaPlayer != null)
+//                {
+//                    int newPosition = sbTime.getProgress();
+//                    mediaPlayer.seekTo(newPosition);
+//                    mediaPlayer.start();
+//                    handler.post(updatePositionRunnable);
+//                }
+//                else
+//                {
+//                    sbTime.setProgress(0);
+//                }
+//
+//            }
+//        });
+//
+//        //Handler to constantly update seekbar progress
+//        handler = new Handler(Looper.getMainLooper());
+//        updatePositionRunnable = new Runnable() {
+//            private long lastSaveTime = 0;
+//            private static final long SAVE_INTERVAL = 10000;
+//            @Override
+//            public void run() {
+//                if(mediaPlayer != null && mediaPlayer.isPlaying())
+//                {
+//                    int currentPosition = mediaPlayer.getCurrentPosition();
+//                    tvCurrentTime.setText(formatDuration(currentPosition));
+//                    sbTime.setProgress(currentPosition);
+//
+//                    long currentTimeMillis = System.currentTimeMillis();
+//                    if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL)
+//                    {
+//                        try {
+//                            savePlaybackPosition(mediaUri);
+//                            lastSaveTime = currentTimeMillis;
+//                        } catch (IOException e) {
+//                            throw new RuntimeException(e);
+//                        }
+//                    }
+//
+//                    handler.postDelayed(this, 1000);
+//                }
+//            }
+//        };
+//
+//
+//        //Spinner options to pick playback speed
+//        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+//                R.array.playback_speeds, android.R.layout.simple_spinner_item);
+//
+//        spinnerPlaybackSpeed.setAdapter(adapter);
+//
+//        //sets default to 1.00x speed
+//        spinnerPlaybackSpeed.setSelection(2);
+//
+//        spinnerPlaybackSpeed.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                String selectedSpeed = adapterView.getItemAtPosition(i).toString();
+//                handlePlayBackSpeedChange(selectedSpeed);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> adapterView) {
+//
+//            }
+//        });
+
+        setupUIComponents();
+    }
+
+    private void setupUIComponents()
+    {
         Button btnFileSelect = findViewById(R.id.btnFileSelect);
         Button btnBack = findViewById(R.id.btnBack);
         Button btnForward = findViewById(R.id.btnForward);
