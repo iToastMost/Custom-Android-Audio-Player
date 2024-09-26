@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.CheekyLittleApps.audioplayer.R;
+import com.CheekyLittleApps.audioplayer.helpers.MediaPlayerHelper;
 import com.CheekyLittleApps.audioplayer.helpers.SharedPreferencesHelper;
 import com.CheekyLittleApps.audioplayer.helpers.UIHelper;
 
@@ -78,149 +79,6 @@ public class MainActivity extends AppCompatActivity
         setupUIComponents();
     }
 
-    private void handlePlayButton()
-    {
-        if(mediaPlayer == null)
-            return;
-
-        if(mediaPlayer.isPlaying())
-        {
-            currentTime = mediaPlayer.getCurrentPosition();
-            mediaPlayer.pause();
-            btnPlay.setText("Play");
-            handler.removeCallbacks(updatePositionRunnable);
-            try {
-                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, MainActivity.this);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        else
-        {
-            if(mediaPlayer != null)
-            {
-                mediaPlayer.release();
-                mediaPlayer = null;
-            }
-
-            mediaPlayer = new MediaPlayer();
-
-            try
-            {
-                mediaPlayer.setDataSource(this, mediaUri);
-                mediaPlayer.prepare();
-                mediaPlayer.seekTo(currentTime);
-                mediaPlayer.start();
-                btnPlay.setText("Pause");
-                handler.post(updatePositionRunnable);
-                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
-            }catch(IOException e)
-            {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void handleButtonBack()
-    {
-        if(mediaPlayer == null)
-            return;
-
-        handler.removeCallbacks(updatePositionRunnable);
-
-        int currentPos = mediaPlayer.getCurrentPosition();
-
-        if(currentAudioType.equals("audiobook"))
-        {
-            currentPos -= 15000;
-            mediaPlayer.seekTo(currentPos);
-        }
-        else
-        {
-            mediaPlayer.seekTo(0);
-        }
-
-        handler.post(updatePositionRunnable);
-
-        try {
-            SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void handleButtonForward()
-    {
-        if(mediaPlayer == null)
-            return;
-
-        handler.removeCallbacks(updatePositionRunnable);
-
-        int currentPos = mediaPlayer.getCurrentPosition();
-
-        if(currentAudioType.equals("audiobook"))
-        {
-            currentPos += 15000;
-            mediaPlayer.seekTo(currentPos);
-        }
-        else
-        {
-            mediaPlayer.seekTo(mediaPlayer.getDuration());
-            mediaPlayer.pause();
-        }
-
-        handler.post(updatePositionRunnable);
-
-        try {
-            SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    //Handles the playback speeds of the media player
-    private void handlePlayBackSpeedChange(String selectedSpeed)
-    {
-        Toast.makeText(this, "Selected: " + selectedSpeed, Toast.LENGTH_SHORT).show();
-
-        float playbackSpeed = 1.0f;
-        switch(selectedSpeed)
-        {
-            case "0.50x":
-                playbackSpeed = 0.5f;
-                break;
-
-            case "0.75x":
-                playbackSpeed = 0.75f;
-                break;
-
-            case "1.00x":
-                playbackSpeed = 1.0f;
-                break;
-
-            case "1.25x":
-                playbackSpeed = 1.25f;
-                break;
-
-            case "1.50x":
-                playbackSpeed = 1.5f;
-                break;
-
-            case "1.75x":
-                playbackSpeed = 1.75f;
-                break;
-
-            case "2.00x":
-                playbackSpeed = 2.0f;
-                break;
-        }
-
-        if(mediaPlayer != null)
-        {
-            mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(playbackSpeed));
-        }
-    }
-
     private void handleAudioFile(Uri uri)
     {
         if (mediaPlayer != null) {
@@ -247,7 +105,7 @@ public class MainActivity extends AppCompatActivity
 
             mediaPlayer.seekTo(currentTime);
             mediaPlayer.start();
-            handlePlayBackSpeedChange(playbackSpeed);
+            MediaPlayerHelper.handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
             sbTime.setMax(mediaPlayer.getDuration());
             btnPlay.setText("Pause");
             handler.post(updatePositionRunnable);
@@ -333,18 +191,42 @@ public class MainActivity extends AppCompatActivity
 
         btnFileSelect.setOnClickListener(v -> {
             showFileChooser(filePickerLauncher);
+
+            try {
+                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         btnPlay.setOnClickListener(v -> {
-            handlePlayButton();
+            MediaPlayerHelper.handlePlayButton(btnPlay, mediaPlayer, handler, updatePositionRunnable);
+
+            try {
+                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, MainActivity.this);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         btnForward.setOnClickListener(v -> {
-            handleButtonForward();
+            MediaPlayerHelper.handleButtonForward(mediaPlayer, handler, updatePositionRunnable, currentAudioType);
+
+            try {
+                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         btnBack.setOnClickListener(v -> {
-            handleButtonBack();
+            MediaPlayerHelper.handleButtonBack(mediaPlayer, handler, updatePositionRunnable, currentAudioType);
+
+            try {
+                SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, this);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         });
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
@@ -443,7 +325,13 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String selectedSpeed = adapterView.getItemAtPosition(i).toString();
-                handlePlayBackSpeedChange(selectedSpeed);
+                MediaPlayerHelper.handlePlayBackSpeedChange(selectedSpeed, mediaPlayer);
+                UIHelper.showToast(MainActivity.this, "Selected: " + selectedSpeed);
+                try {
+                    SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, MainActivity.this);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
 
             @Override

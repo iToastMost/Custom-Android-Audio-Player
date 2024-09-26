@@ -8,6 +8,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 
@@ -53,5 +54,9 @@ public class UIHelper
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    public static void showToast(Context context, String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
     }
 }
