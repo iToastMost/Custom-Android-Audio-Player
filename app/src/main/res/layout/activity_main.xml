@@ -18,7 +18,7 @@
         app:layout_constraintTop_toBottomOf="@+id/tvCurrentTime" />
 
     <Button
-        android:id="@+id/btnPlay"
+        android:id="@+id/btnWidgetPlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/play_button_text"
@@ -33,7 +33,7 @@
         android:layout_marginEnd="32dp"
         android:text="@string/forward_button_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/btnPlay" />
+        app:layout_constraintTop_toTopOf="@+id/btnWidgetPlay" />
 
     <SeekBar
         android:id="@+id/sbTime"

@@ -29,9 +29,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.CheekyLittleApps.audioplayer.R;
 import com.CheekyLittleApps.audioplayer.helpers.MediaPlayerHelper;
 import com.CheekyLittleApps.audioplayer.helpers.SharedPreferencesHelper;
 import com.CheekyLittleApps.audioplayer.helpers.UIHelper;
@@ -178,7 +176,7 @@ public class MainActivity extends AppCompatActivity
 
         spinnerPlaybackSpeed = findViewById(R.id.spinnerPlaybackSpeed);
 
-        btnPlay = findViewById(R.id.btnPlay);
+        btnPlay = findViewById(R.id.btnWidgetPlay);
 
         tvTitle = findViewById(R.id.tvTitle);
         tvArtist = findViewById(R.id.tvArtist);
