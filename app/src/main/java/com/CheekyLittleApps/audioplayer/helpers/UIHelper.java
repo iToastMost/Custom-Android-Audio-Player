@@ -50,10 +50,16 @@ public class UIHelper
     }
 
     public static String formatDuration(long durationInMillis) {
-        long totalSeconds = durationInMillis / 1000;
-        long minutes = totalSeconds / 60;
-        long seconds = totalSeconds % 60;
-        return String.format("%02d:%02d", minutes, seconds);
+        long durationInSec = durationInMillis / 1000;
+        long hours = durationInSec / 3600;
+        long minutes = (durationInSec % 3600) / 60;
+        long seconds = durationInSec % 60;
+
+        if (hours > 0) {
+            return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        } else {
+            return String.format("%02d:%02d", minutes, seconds);
+        }
     }
 
     public static void showToast(Context context, String message) {

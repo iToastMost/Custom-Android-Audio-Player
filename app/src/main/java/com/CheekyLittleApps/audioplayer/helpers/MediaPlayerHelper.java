@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -19,18 +20,60 @@ import java.io.IOException;
 
 public class MediaPlayerHelper
 {
-    private MediaPlayer mediaPlayer;
-    private Handler handler;
-    private Runnable updatePositionRunnable;
-    private Context context;
+    private static MediaPlayer mediaPlayer;
+    private static Handler handler;
+    private static Runnable updatePositionRunnable;
+    private static Context context;
+    private static int currentTime;
+    private static String currentAudioType = "";
+    private static Uri currentUri;
+    private static MediaNotificationHelper notificationHelper;
+    private static MediaSessionCompat mediaSession;
 
-    public MediaPlayerHelper(Context context, Handler handler, Runnable updatePositionRunnable) {
+    public MediaPlayerHelper(Context context, MediaSessionCompat mediaSession) {
         this.context = context;
-        this.handler = handler;
-        this.updatePositionRunnable = updatePositionRunnable;
+        this.handler = new Handler();
+        this.mediaPlayer = new MediaPlayer();
+        this.currentUri = currentUri;
+        notificationHelper = new MediaNotificationHelper(context, mediaSession);
     }
 
-    public static void handlePlayButton(Button btnPlay, MediaPlayer mediaPlayer, Handler handler, Runnable updatePositionRunnable)
+    public void startUpdatingCurrentTime(SeekBar seekBar, TextView tvCurrentTime, Uri mediaUri, MainActivity activity) {
+        updatePositionRunnable = new Runnable() {
+            private long lastSaveTime = 0;
+            private static final long SAVE_INTERVAL = 10000;
+
+            @Override
+            public void run() {
+                if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    tvCurrentTime.setText(UIHelper.formatDuration(currentPosition));
+                    seekBar.setProgress(currentPosition);
+
+                    long currentTimeMillis = System.currentTimeMillis();
+                    if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL) {
+                        try {
+                            SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, activity);
+                            lastSaveTime = currentTimeMillis;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    handler.postDelayed(this, 1000);
+                }
+            }
+        };
+        handler.post(updatePositionRunnable);
+    }
+
+    public void stopUpdatingCurrentTime() {
+        if (updatePositionRunnable != null) {
+            handler.removeCallbacks(updatePositionRunnable);
+        }
+    }
+
+    public static void handlePlayButton(Button btnPlay)
     {
         if(mediaPlayer == null)
             return;
@@ -49,14 +92,14 @@ public class MediaPlayerHelper
         }
     }
 
-    public static void handleButtonForward(MediaPlayer mediaPlayer, Handler handler, Runnable updatePositionRunnable, String currentAudioType)
-    {
+    public static void handleButtonForward(Uri mediaUri) throws IOException {
         if(mediaPlayer == null)
             return;
 
         handler.removeCallbacks(updatePositionRunnable);
 
         int currentPos = mediaPlayer.getCurrentPosition();
+        currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
 
         if(currentAudioType.equals("audiobook"))
         {
@@ -72,14 +115,14 @@ public class MediaPlayerHelper
         handler.post(updatePositionRunnable);
     }
 
-    public static void handleButtonBack(MediaPlayer mediaPlayer, Handler handler, Runnable updatePositionRunnable, String currentAudioType)
-    {
+    public static void handleButtonBack(Uri mediaUri) throws IOException {
         if(mediaPlayer == null)
             return;
 
         handler.removeCallbacks(updatePositionRunnable);
 
         int currentPos = mediaPlayer.getCurrentPosition();
+        currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
 
         if(currentAudioType.equals("audiobook"))
         {
@@ -129,101 +172,177 @@ public class MediaPlayerHelper
                 break;
         }
 
-        if(mediaPlayer != null)
-        {
+        try {
             mediaPlayer.setPlaybackParams(mediaPlayer.getPlaybackParams().setSpeed(playbackSpeed));
+        } catch (IllegalStateException e) {
+            // Log or handle the error appropriately
+            e.printStackTrace();
         }
     }
 
-//    private void handleAudioFile(Uri uri, Spinner spinnerPlaybackSpeed, Uri mediaUri, SeekBar sbTime, Button btnPlay, String currentAudioType, ImageView ivCover, TextView tvTitle, TextView tvArtist, TextView tvSongLength)
-//    {
-//        if (mediaPlayer != null) {
-//            mediaPlayer.release();
-//            mediaPlayer = null;
-//        }
-//
-//        mediaPlayer = new MediaPlayer();
-//
-//        try
-//        {
-//            String playbackSpeed = spinnerPlaybackSpeed.getSelectedItem().toString();
-//            mediaPlayer.setDataSource(this, uri);
-//            mediaPlayer.prepare();
-//
-//            int currentTime = 0;
-//
-//            int savedPosition = SharedPreferencesHelper.getSavedPlaybackPosition(this, uri);
-//
-//            if(savedPosition > 0 && "audiobook".equals(SharedPreferencesHelper.getAudioType(this, mediaUri)))
-//            {
-//                currentTime = savedPosition;
-//            }
-//
-//            mediaPlayer.seekTo(currentTime);
-//            mediaPlayer.start();
-//            MediaPlayerHelper.handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
-//            sbTime.setMax(mediaPlayer.getDuration());
-//            btnPlay.setText("Pause");
-//            handler.post(updatePositionRunnable);
-//
-//            currentAudioType = SharedPreferencesHelper.getAudioType(this, mediaUri);
-//        }
-//        catch(IOException e)
-//        {
-//            e.printStackTrace();
-//        }
-//
-//        //releases media player for next song if I decide to implement this feature
-//        /*
-//        mediaPlayer.setOnCompletionListener(mp -> {
-//            mp.release();
-//            mediaPlayer = null;
-//            handler.removeCallbacks(updatePositionRunnable);
-//        });
-//         */
-//
-//        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
-//        retriever.setDataSource(MainActivity.this, uri);
-//
-//        byte[] artBytes = retriever.getEmbeddedPicture();
-//        if(artBytes != null)
-//        {
-//            Bitmap albumArt = BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
-//            ivCover.setImageBitmap(albumArt);
-//        }
-//        else
-//        {
-//
-//        }
-//
-//        tvTitle.setText(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE));
-//        tvArtist.setText(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST));
-//
-//        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-//
-//        if(duration != null)
-//        {
-//            long durationInMillis = Long.parseLong(duration);
-//            long durationInSec = durationInMillis / 1000;
-//            long minutes = durationInSec / 60;
-//            long seconds = durationInSec % 60;
-//            String songLength = String.format("%02d:%02d", minutes, seconds);
-//            tvSongLength.setText(songLength);
-//        }
-//
-//        if(retriever != null)
-//        {
-//            try
-//            {
-//                retriever.release();
-//                retriever = null;
-//            }catch (IOException e)
-//            {
-//                e.printStackTrace();
-//            }
-//
-//        }
-//
-//    }
+
+    public static void handleAudioFile(Uri uri, Spinner spinnerPlaybackSpeed, Button btnPlay, SeekBar sbTime, ImageView ivCover, TextView tvTitle, TextView tvArtist, TextView tvSongLength, Uri mediaUri, TextView tvCurrentTime)
+    {
+        try
+        {
+            currentUri = uri;
+            mediaPlayer.reset();
+            String playbackSpeed = spinnerPlaybackSpeed.getSelectedItem().toString();
+            mediaPlayer.setDataSource(context, uri);
+            mediaPlayer.prepare();
+
+            currentTime = 0;
+
+            int savedPosition = SharedPreferencesHelper.getSavedPlaybackPosition(context, uri);
+
+            if(savedPosition > 0 && "audiobook".equals(SharedPreferencesHelper.getAudioType(context, mediaUri)))
+            {
+                currentTime = savedPosition;
+            }
+
+
+            tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
+            mediaPlayer.seekTo(currentTime);
+            mediaPlayer.start();
+            handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
+            sbTime.setMax(mediaPlayer.getDuration());
+            btnPlay.setText("Pause");
+            handler.post(updatePositionRunnable);
+
+            currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
+        }
+        catch(IOException e)
+        {
+            e.printStackTrace();
+        }
+
+        //releases media player for next song if I decide to implement this feature
+        /*
+        mediaPlayer.setOnCompletionListener(mp -> {
+            mp.release();
+            mediaPlayer = null;
+            handler.removeCallbacks(updatePositionRunnable);
+        });
+         */
+
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(context, uri);
+
+        byte[] artBytes = retriever.getEmbeddedPicture();
+        Bitmap albumArt = null;
+        if(artBytes != null)
+        {
+            albumArt = BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
+            ivCover.setImageBitmap(albumArt);
+        }
+
+        String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+
+        tvTitle.setText(title);
+        tvArtist.setText(artist);
+
+        Bitmap resized = null;
+        resized = resizeBitmap(albumArt, 256, 256);
+
+        notificationHelper.showNotification(title, artist, resized);
+
+        String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+
+        if(duration != null )
+        {
+            long durationInMillis = Long.parseLong(duration);
+            long durationInSec = durationInMillis / 1000;
+            long minutes = (durationInSec % 3600) / 60;
+            long seconds = durationInSec % 60;
+            long hours = durationInSec / 3600;
+            String songLength;
+            if(hours > 0)
+            {
+                songLength = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+            }
+            else
+            {
+                songLength = String.format("%02d:%02d", minutes, seconds);
+            }
+            tvSongLength.setText(songLength);
+        }
+
+
+        if(retriever != null)
+        {
+            try
+            {
+                retriever.release();
+                retriever = null;
+            }catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    public static MediaPlayer getMediaPlayer()
+    {
+        return mediaPlayer;
+    }
+
+    public static Uri getUri()
+    {
+        return currentUri;
+    }
+
+    private void setMediaPlayer(MediaPlayer mediaPlayer)
+    {
+        this.mediaPlayer = mediaPlayer;
+    }
+
+    public boolean isPlaying() {
+        return mediaPlayer != null && mediaPlayer.isPlaying();
+    }
+
+    public void play() {
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
+    }
+
+    public void pause() {
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }
+    }
+
+    public void release() {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+    }
+
+    public static Bitmap resizeBitmap(Bitmap originalImage, int targetWidth, int targetHeight) {
+        if (originalImage == null) {
+            return null;
+        }
+
+        // Calculate the aspect ratio
+        float aspectRatio = originalImage.getWidth() / (float) originalImage.getHeight();
+
+        int newWidth = targetWidth;
+        int newHeight = targetHeight;
+
+        // Adjust width/height to preserve aspect ratio
+        if (aspectRatio > 1) { // Landscape
+            newHeight = Math.round(targetWidth / aspectRatio);
+        } else if (aspectRatio < 1) { // Portrait
+            newWidth = Math.round(targetHeight * aspectRatio);
+        }
+
+        // Scale the bitmap to the new dimensions
+        return Bitmap.createScaledBitmap(originalImage, newWidth, newHeight, false);
+    }
 }
 
