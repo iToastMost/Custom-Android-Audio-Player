@@ -56,15 +56,16 @@ public class MediaNotificationHelper
 
 
 
-    public void showNotification(String title, String artist, Bitmap albumArt)
+    public void showNotification(String title, String artist, Bitmap albumArt, Boolean isPlaying)
     {
         PendingIntent playPauseIntent = createPendingIntent("ACTION_PLAY_PAUSE");
         PendingIntent nextIntent = createPendingIntent("ACTION_NEXT");
         PendingIntent previousIntent = createPendingIntent("ACTION_PREVIOUS");
 
+        int playPauseIcon = isPlaying ? R.drawable.ic_pause : R.drawable.ic_play_arrow;
 
         NotificationCompat.Action playPauseAction = new NotificationCompat.Action.Builder(
-                R.drawable.ic_play_arrow,
+                playPauseIcon,
                 "Play",
                 playPauseIntent
         ).build();
@@ -126,7 +127,7 @@ public class MediaNotificationHelper
 
     public void updateNotifcation(String title, String artist, Bitmap albumArt)
     {
-        showNotification(title, artist, albumArt);
+        showNotification(title, artist, albumArt, MediaPlayerHelper.isPlaying());
     }
 
     public void clearNotification() {

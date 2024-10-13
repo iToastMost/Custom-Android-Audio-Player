@@ -29,6 +29,9 @@ public class MediaPlayerHelper
     private static Uri currentUri;
     private static MediaNotificationHelper notificationHelper;
     private static MediaSessionCompat mediaSession;
+    private static String title;
+    private static String artist;
+    static Bitmap albumArt = null;
 
     public MediaPlayerHelper(Context context, MediaSessionCompat mediaSession) {
         this.context = context;
@@ -65,6 +68,30 @@ public class MediaPlayerHelper
             }
         };
         handler.post(updatePositionRunnable);
+
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+
+                    mediaPlayer.seekTo(progress);
+                    tvCurrentTime.setText(UIHelper.formatDuration(progress));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+                handler.removeCallbacks(updatePositionRunnable);
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+                handler.post(updatePositionRunnable);
+            }
+        });
     }
 
     public void stopUpdatingCurrentTime() {
@@ -229,15 +256,15 @@ public class MediaPlayerHelper
         retriever.setDataSource(context, uri);
 
         byte[] artBytes = retriever.getEmbeddedPicture();
-        Bitmap albumArt = null;
+        albumArt = null;
         if(artBytes != null)
         {
             albumArt = BitmapFactory.decodeByteArray(artBytes, 0, artBytes.length);
             ivCover.setImageBitmap(albumArt);
         }
 
-        String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-        String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
 
         tvTitle.setText(title);
         tvArtist.setText(artist);
@@ -245,7 +272,7 @@ public class MediaPlayerHelper
         Bitmap resized = null;
         resized = resizeBitmap(albumArt, 256, 256);
 
-        notificationHelper.showNotification(title, artist, resized);
+        notificationHelper.showNotification(title, artist, resized, isPlaying());
 
         String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
@@ -295,12 +322,27 @@ public class MediaPlayerHelper
         return currentUri;
     }
 
+    public static String getTitle()
+    {
+        return title;
+    }
+
+    public static String getArtist()
+    {
+        return artist;
+    }
+
+    public static Bitmap getAlbumArt()
+    {
+        return albumArt;
+    }
+
     private void setMediaPlayer(MediaPlayer mediaPlayer)
     {
         this.mediaPlayer = mediaPlayer;
     }
 
-    public boolean isPlaying() {
+    public static boolean isPlaying() {
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 

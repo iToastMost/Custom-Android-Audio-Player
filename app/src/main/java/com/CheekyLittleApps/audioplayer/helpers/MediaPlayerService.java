@@ -29,6 +29,7 @@ public class MediaPlayerService extends Service
         super.onCreate();
         mediaSession = new MediaSessionCompat(this, "MediaSessionTag");
         mediaPlayerHelper = new MediaPlayerHelper(this, mediaSession);
+        mediaNotificationHelper = new MediaNotificationHelper(this, mediaSession);
     }
 
     @Override
@@ -57,7 +58,6 @@ public class MediaPlayerService extends Service
             }
         }
 
-        updateNotification();
         return START_NOT_STICKY;
     }
 
@@ -72,7 +72,7 @@ public class MediaPlayerService extends Service
 
     // Update the media notification to reflect play/pause state
     private void updateNotification() {
-        //mediaNotificationHelper.showNotification();
+        mediaNotificationHelper.showNotification(mediaPlayerHelper.getTitle(), mediaPlayerHelper.getArtist(), mediaPlayerHelper.getAlbumArt(), mediaPlayerHelper.isPlaying());
     }
 
     @Override
