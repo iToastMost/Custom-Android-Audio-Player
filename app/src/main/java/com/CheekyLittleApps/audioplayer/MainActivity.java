@@ -3,34 +3,22 @@ package com.CheekyLittleApps.audioplayer;
 import static com.CheekyLittleApps.audioplayer.helpers.UIHelper.showFileChooser;
 
 import android.app.Activity;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
-import android.media.session.MediaSession;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import android.media.MediaPlayer;
+
 import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -63,7 +51,7 @@ public class MainActivity extends AppCompatActivity
 
     private Spinner spinnerPlaybackSpeed;
 
-    Button btnPlay;
+    static Button btnPlay;
 
     TextView tvTitle;
     TextView tvArtist;
@@ -89,14 +77,56 @@ public class MainActivity extends AppCompatActivity
 
         mediaSession = new MediaSessionCompat(this, "MediaSessionTag");
         mediaPlayerHelper = new MediaPlayerHelper(this, mediaSession);
+        notificationHelper = new MediaNotificationHelper(this, mediaSession);
         Intent serviceIntent = new Intent(this, MediaPlayerService.class);
         startService(serviceIntent);
+
+        mediaSession.setCallback(new MediaSessionCompat.Callback() {
+            @Override
+            public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
+                KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
+                    int keyCode = keyEvent.getKeyCode();
+                    switch (keyCode) {
+                        case KeyEvent.KEYCODE_MEDIA_PLAY:
+                            MediaPlayerHelper.handlePlayButton();
+                            //notificationHelper.updateNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying());
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                            MediaPlayerHelper.handlePlayButton();
+                            //notificationHelper.updateNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying());
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_NEXT:
+                            try {
+                                MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                            try {
+                                MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                    }
+                }
+                return true;
+            }
+        });
 
         mediaSession.setActive(true);
 
         setupUIComponents();
 
         mediaPlayerHelper.startUpdatingCurrentTime(sbTime, tvCurrentTime, mediaUri, this);
+    }
+
+    public static void updatePlayButtonText(String text) {
+        if (btnPlay != null) {
+            btnPlay.setText(text);
+        }
     }
 
     private void setupUIComponents()
@@ -129,7 +159,8 @@ public class MainActivity extends AppCompatActivity
         });
 
         btnPlay.setOnClickListener(v -> {
-            MediaPlayerHelper.handlePlayButton(btnPlay);
+            MediaPlayerHelper.handlePlayButton();
+
 
             try {
                 SharedPreferencesHelper.savePlaybackPosition(mediaUri, MediaPlayerHelper.getMediaPlayer(), MainActivity.this);
@@ -197,7 +228,7 @@ public class MainActivity extends AppCompatActivity
                     MediaPlayerHelper.handlePlayBackSpeedChange(selectedSpeed, MediaPlayerHelper.getMediaPlayer());
                     UIHelper.showToast(MainActivity.this, "Selected: " + selectedSpeed);
                     try {
-                        SharedPreferencesHelper.savePlaybackPosition(mediaUri, MediaPlayerHelper.getMediaPlayer(), MainActivity.this);
+                        SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), MainActivity.this);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -210,6 +241,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
     @Override
     protected void onDestroy()
     {

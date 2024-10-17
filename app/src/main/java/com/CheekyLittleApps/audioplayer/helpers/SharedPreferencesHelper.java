@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.util.Log;
 
 import java.io.IOException;
 
@@ -35,7 +36,12 @@ public class SharedPreferencesHelper
         String audioType = "unknown";
 
         try {
-            retriever.setDataSource(context, uri);
+            if (uri != null) {
+                retriever.setDataSource(context, uri);
+            } else {
+                Log.e("MediaMetadataRetriever", "URI is null, cannot retrieve metadata");
+            }
+
 
             String durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
             long durationMs = 0;

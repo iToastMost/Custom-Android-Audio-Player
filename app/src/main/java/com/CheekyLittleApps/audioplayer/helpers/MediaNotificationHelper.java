@@ -1,6 +1,5 @@
 package com.CheekyLittleApps.audioplayer.helpers;
 
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -13,7 +12,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.media.app.NotificationCompat.MediaStyle;
+
 import android.os.Build;
 
 import com.CheekyLittleApps.audioplayer.R;
@@ -24,6 +23,7 @@ public class MediaNotificationHelper
     private final NotificationManager notificationManager;
     private final Context context;
     private final MediaSessionCompat mediaSession;
+
 
     public MediaNotificationHelper(Context context, MediaSessionCompat mediaSession) {
         this.context = context;
@@ -125,9 +125,9 @@ public class MediaNotificationHelper
         notificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 
-    public void updateNotifcation(String title, String artist, Bitmap albumArt)
+    public void updateNotification(String title, String artist, Bitmap albumArt, Boolean isPlaying)
     {
-        showNotification(title, artist, albumArt, MediaPlayerHelper.isPlaying());
+        showNotification(title, artist, albumArt, isPlaying);
     }
 
     public void clearNotification() {

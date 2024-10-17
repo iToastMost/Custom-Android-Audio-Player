@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
+import android.widget.Button;
 
 import com.CheekyLittleApps.audioplayer.MainActivity;
 import com.CheekyLittleApps.audioplayer.R;
@@ -39,7 +40,7 @@ public class MediaPlayerService extends Service
         if (action != null) {
             switch (action) {
                 case "ACTION_PLAY_PAUSE":
-                    handlePlayPause();
+                    MediaPlayerHelper.handlePlayButton();
                     break;
                 case "ACTION_NEXT":
                     try {

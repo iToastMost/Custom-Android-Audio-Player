@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -17,9 +18,12 @@ import android.widget.TextView;
 import com.CheekyLittleApps.audioplayer.MainActivity;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MediaPlayerHelper
 {
+
     private static MediaPlayer mediaPlayer;
     private static Handler handler;
     private static Runnable updatePositionRunnable;
@@ -32,6 +36,8 @@ public class MediaPlayerHelper
     private static String title;
     private static String artist;
     static Bitmap albumArt = null;
+    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public MediaPlayerHelper(Context context, MediaSessionCompat mediaSession) {
         this.context = context;
@@ -100,7 +106,7 @@ public class MediaPlayerHelper
         }
     }
 
-    public static void handlePlayButton(Button btnPlay)
+    public static void handlePlayButton()
     {
         if(mediaPlayer == null)
             return;
@@ -108,38 +114,53 @@ public class MediaPlayerHelper
         if(mediaPlayer.isPlaying())
         {
             mediaPlayer.pause();
-            btnPlay.setText("Play");
+            MainActivity.updatePlayButtonText("Play");
+            mainHandler.post(() -> MainActivity.updatePlayButtonText("Play"));
             handler.removeCallbacks(updatePositionRunnable);
+            notificationHelper.updateNotification(title, artist, albumArt, false);
+
         }
         else
         {
-                mediaPlayer.start();
-                btnPlay.setText("Pause");
-                handler.post(updatePositionRunnable);
+            mediaPlayer.start();
+            MainActivity.updatePlayButtonText("Pause");
+            handler.post(updatePositionRunnable);
+            notificationHelper.updateNotification(title, artist, albumArt, true);
+
         }
     }
 
     public static void handleButtonForward(Uri mediaUri) throws IOException {
-        if(mediaPlayer == null)
-            return;
 
-        handler.removeCallbacks(updatePositionRunnable);
-
-        int currentPos = mediaPlayer.getCurrentPosition();
-        currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
-
-        if(currentAudioType.equals("audiobook"))
+        executorService.execute(() ->
         {
-            currentPos += 15000;
-            mediaPlayer.seekTo(currentPos);
-        }
-        else
-        {
-            mediaPlayer.seekTo(mediaPlayer.getDuration());
-            mediaPlayer.pause();
-        }
+            if(mediaPlayer == null)
+                return;
 
-        handler.post(updatePositionRunnable);
+            handler.removeCallbacks(updatePositionRunnable);
+
+            int currentPos = mediaPlayer.getCurrentPosition();
+            try {
+                currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            if(currentAudioType.equals("audiobook"))
+            {
+                currentPos += 15000;
+                mediaPlayer.seekTo(currentPos);
+            }
+            else
+            {
+                mediaPlayer.seekTo(mediaPlayer.getDuration());
+                mediaPlayer.pause();
+            }
+
+            handler.post(updatePositionRunnable);
+            notificationHelper.updateNotification(title, artist, albumArt, isPlaying());
+        });
+
     }
 
     public static void handleButtonBack(Uri mediaUri) throws IOException {
@@ -162,6 +183,7 @@ public class MediaPlayerHelper
         }
 
         handler.post(updatePositionRunnable);
+        notificationHelper.updateNotification(title, artist, albumArt, isPlaying());
     }
 
     //Handles the playback speeds of the media player
