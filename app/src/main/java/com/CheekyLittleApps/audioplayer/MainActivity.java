@@ -5,16 +5,23 @@ import static com.CheekyLittleApps.audioplayer.helpers.UIHelper.showFileChooser;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import android.Manifest;
 
 import android.os.Handler;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -27,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.CheekyLittleApps.audioplayer.helpers.MediaNotificationHelper;
 import com.CheekyLittleApps.audioplayer.helpers.MediaPlayerHelper;
@@ -41,6 +49,10 @@ public class MainActivity extends AppCompatActivity
     private static final String PREFS_NAME = "AudioPlayerPrefs";
     private static final String KEY_POSITION = "audiobook_position";
 
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1;
+    private static final String PREFS_APP = "app_prefs";
+    private static final String KEY_NEVER_SHOW_AGAIN = "never_show_again";
+    boolean neverShowAgain;
 
     private Handler handler;
     private Runnable updatePositionRunnable;
@@ -62,6 +74,8 @@ public class MainActivity extends AppCompatActivity
 
     private MediaSessionCompat mediaSession;
     private MediaNotificationHelper notificationHelper;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -74,6 +88,9 @@ public class MainActivity extends AppCompatActivity
             return insets;
         });
 
+
+        SharedPreferences prefs = getSharedPreferences(PREFS_APP, MODE_PRIVATE);
+        neverShowAgain = prefs.getBoolean(KEY_NEVER_SHOW_AGAIN, false);
 
         mediaSession = new MediaSessionCompat(this, "MediaSessionTag");
         mediaPlayerHelper = new MediaPlayerHelper(this, mediaSession);
@@ -121,13 +138,18 @@ public class MainActivity extends AppCompatActivity
         setupUIComponents();
 
         mediaPlayerHelper.startUpdatingCurrentTime(sbTime, tvCurrentTime, mediaUri, this);
+
+        requestNotificationPermission();
     }
+
 
     public static void updatePlayButtonText(String text) {
         if (btnPlay != null) {
             btnPlay.setText(text);
         }
     }
+
+
 
     private void setupUIComponents()
     {
@@ -242,6 +264,22 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private void showPermissionDeniedAlert() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_APP, MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        new AlertDialog.Builder(this)
+                .setTitle("Permission Required")
+                .setMessage("This app requires notification permissions to display controls on the lock screen. The app will send you no other notifications. If you wish to have this functionality" +
+                        " please enable notification permissions in the app settings.")
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setNeutralButton("Never Show Again", (dialog, which) -> {
+                    editor.putBoolean(KEY_NEVER_SHOW_AGAIN, true);  // Set "Never Show Again" flag
+                    editor.apply();
+                })
+                .show();
+    }
+
     @Override
     protected void onDestroy()
     {
@@ -261,4 +299,28 @@ public class MainActivity extends AppCompatActivity
         handler.removeCallbacks(updatePositionRunnable);
     }
 
+
+    private void requestNotificationPermission() {
+        if (!neverShowAgain && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 (API 33) or higher
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Request the permission
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission granted, show notification
+                //showNotification();
+            } else {
+                // Permission denied, handle accordingly
+                showPermissionDeniedAlert();
+            }
+        }
+    }
 }
