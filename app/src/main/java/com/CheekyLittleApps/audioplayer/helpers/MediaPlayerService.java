@@ -25,6 +25,7 @@ public class MediaPlayerService extends Service
     private MediaPlayerHelper mediaPlayerHelper;
     private MediaNotificationHelper mediaNotificationHelper;
     private MediaSessionCompat mediaSession;
+    IBinder binder = null;
 
     @Override
     public void onCreate() {
@@ -78,7 +79,8 @@ public class MediaPlayerService extends Service
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null; // Not binding this service
+
+        return binder; // Not binding this service
     }
 
     @Override
