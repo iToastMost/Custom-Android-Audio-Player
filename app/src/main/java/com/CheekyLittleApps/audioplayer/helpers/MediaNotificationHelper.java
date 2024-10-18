@@ -133,4 +133,7 @@ public class MediaNotificationHelper
     public void clearNotification() {
         notificationManager.cancel(NOTIFICATION_ID);
     }
+
+
+
 }

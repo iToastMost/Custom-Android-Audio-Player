@@ -1,5 +1,6 @@
 package com.CheekyLittleApps.audioplayer.helpers;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -36,7 +37,6 @@ public class MediaPlayerService extends Service
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
-
         if (action != null) {
             switch (action) {
                 case "ACTION_PLAY_PAUSE":
@@ -59,7 +59,7 @@ public class MediaPlayerService extends Service
             }
         }
 
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     private void handlePlayPause() {
@@ -84,7 +84,18 @@ public class MediaPlayerService extends Service
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mediaPlayerHelper.release();
-        mediaSession.release();
+        Log.d("d", "On destroy called in MPS");
+        //mediaPlayerHelper.release();
+        //mediaSession.release();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent)
+    {
+        super.onTaskRemoved(rootIntent);
+        Log.d("d", "On task remove called MPS");
+        mediaNotificationHelper.clearNotification();
+        MediaPlayerHelper.release();
+        stopSelf();
     }
 }

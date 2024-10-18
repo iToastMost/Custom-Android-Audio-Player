@@ -1,5 +1,8 @@
 package com.CheekyLittleApps.audioplayer.helpers;
 
+import static androidx.core.app.ServiceCompat.startForeground;
+
+import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,7 +11,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -39,6 +44,8 @@ public class MediaPlayerHelper
     private static ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    private static PowerManager.WakeLock wakeLock;
+
     public MediaPlayerHelper(Context context, MediaSessionCompat mediaSession) {
         this.context = context;
         this.handler = new Handler();
@@ -62,7 +69,7 @@ public class MediaPlayerHelper
                     long currentTimeMillis = System.currentTimeMillis();
                     if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL) {
                         try {
-                            SharedPreferencesHelper.savePlaybackPosition(mediaUri, mediaPlayer, activity);
+                            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), mediaPlayer, activity);
                             lastSaveTime = currentTimeMillis;
                         } catch (IOException e) {
                             throw new RuntimeException(e);
@@ -118,7 +125,7 @@ public class MediaPlayerHelper
             mainHandler.post(() -> MainActivity.updatePlayButtonText("Play"));
             handler.removeCallbacks(updatePositionRunnable);
             notificationHelper.updateNotification(title, artist, albumArt, false);
-
+            releaseWakeLock();
         }
         else
         {
@@ -126,7 +133,7 @@ public class MediaPlayerHelper
             MainActivity.updatePlayButtonText("Pause");
             handler.post(updatePositionRunnable);
             notificationHelper.updateNotification(title, artist, albumArt, true);
-
+            acquireWakeLock();
         }
     }
 
@@ -294,11 +301,9 @@ public class MediaPlayerHelper
         Bitmap resized = null;
         resized = resizeBitmap(albumArt, 256, 256);
 
-        notificationHelper.showNotification(title, artist, resized, isPlaying());
-
         String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
-
+        notificationHelper.showNotification(title, artist, resized, isPlaying());
         if(duration != null )
         {
             long durationInMillis = Long.parseLong(duration);
@@ -359,11 +364,6 @@ public class MediaPlayerHelper
         return albumArt;
     }
 
-    private void setMediaPlayer(MediaPlayer mediaPlayer)
-    {
-        this.mediaPlayer = mediaPlayer;
-    }
-
     public static boolean isPlaying() {
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
@@ -380,12 +380,6 @@ public class MediaPlayerHelper
         }
     }
 
-    public void release() {
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
-    }
 
     public static Bitmap resizeBitmap(Bitmap originalImage, int targetWidth, int targetHeight) {
         if (originalImage == null) {
@@ -408,5 +402,32 @@ public class MediaPlayerHelper
         // Scale the bitmap to the new dimensions
         return Bitmap.createScaledBitmap(originalImage, newWidth, newHeight, false);
     }
+
+    private static void acquireWakeLock() {
+        PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::AudioWakelockTag");
+        wakeLock.acquire();
+    }
+
+    private static void releaseWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+        }
+    }
+
+    public static void release()
+    {
+        Log.d("d", "Release called");
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        if(wakeLock != null)
+        {
+            releaseWakeLock();
+            wakeLock = null;
+        }
+    }
+
 }
 

@@ -3,9 +3,12 @@ package com.CheekyLittleApps.audioplayer;
 import static com.CheekyLittleApps.audioplayer.helpers.UIHelper.showFileChooser;
 
 import android.app.Activity;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,6 +28,7 @@ import android.Manifest;
 
 import android.os.Handler;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -44,8 +48,7 @@ import com.CheekyLittleApps.audioplayer.helpers.UIHelper;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity
-{
+public class MainActivity extends AppCompatActivity implements AudioManager.OnAudioFocusChangeListener {
     private static final String PREFS_NAME = "AudioPlayerPrefs";
     private static final String KEY_POSITION = "audiobook_position";
 
@@ -75,6 +78,8 @@ public class MainActivity extends AppCompatActivity
     private MediaSessionCompat mediaSession;
     private MediaNotificationHelper notificationHelper;
 
+    private AudioManager audioManager;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -98,20 +103,29 @@ public class MainActivity extends AppCompatActivity
         Intent serviceIntent = new Intent(this, MediaPlayerService.class);
         startService(serviceIntent);
 
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
                 KeyEvent keyEvent = mediaButtonIntent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
                 if (keyEvent != null && keyEvent.getAction() == KeyEvent.ACTION_DOWN) {
                     int keyCode = keyEvent.getKeyCode();
+                    try {
+                        SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), MainActivity.this);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     switch (keyCode) {
+                        case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                            MediaPlayerHelper.handlePlayButton();
+                            break;
                         case KeyEvent.KEYCODE_MEDIA_PLAY:
                             MediaPlayerHelper.handlePlayButton();
-                            //notificationHelper.updateNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying());
                             break;
                         case KeyEvent.KEYCODE_MEDIA_PAUSE:
                             MediaPlayerHelper.handlePlayButton();
-                            //notificationHelper.updateNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying());
                             break;
                         case KeyEvent.KEYCODE_MEDIA_NEXT:
                             try {
@@ -127,6 +141,49 @@ public class MainActivity extends AppCompatActivity
                                 throw new RuntimeException(e);
                             }
                             break;
+                        case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                            try {
+                                MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_REWIND:
+                            try {
+                                MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+                            try {
+                                MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+                            try {
+                                MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_STEP_BACKWARD:
+                            try {
+                                MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+
+                            break;
+                        case KeyEvent.KEYCODE_MEDIA_STEP_FORWARD:
+                            try {
+                                MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            break;
                     }
                 }
                 return true;
@@ -134,7 +191,6 @@ public class MainActivity extends AppCompatActivity
         });
 
         mediaSession.setActive(true);
-
         setupUIComponents();
 
         mediaPlayerHelper.startUpdatingCurrentTime(sbTime, tvCurrentTime, mediaUri, this);
@@ -280,26 +336,6 @@ public class MainActivity extends AppCompatActivity
                 .show();
     }
 
-    @Override
-    protected void onDestroy()
-    {
-        super.onDestroy();
-
-        try {
-            SharedPreferencesHelper.savePlaybackPosition(mediaUri, MediaPlayerHelper.getMediaPlayer(), this);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        mediaPlayerHelper.stopUpdatingCurrentTime();
-
-        if(MediaPlayerHelper.getMediaPlayer()  != null) {
-            MediaPlayerHelper.getMediaPlayer().release();
-        }
-        handler.removeCallbacks(updatePositionRunnable);
-    }
-
-
     private void requestNotificationPermission() {
         if (!neverShowAgain && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13 (API 33) or higher
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -322,5 +358,62 @@ public class MainActivity extends AppCompatActivity
                 showPermissionDeniedAlert();
             }
         }
+    }
+
+
+    public void requestAudioFocus() {
+        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            // Start playback or do something when audio focus is granted
+        }
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        switch (focusChange) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                // Resume playback if audio focus is gained
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                // Stop playback if audio focus is lost
+                MediaPlayerHelper.handlePlayButton();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                // Pause playback if audio focus is lost temporarily
+                MediaPlayerHelper.handlePlayButton();
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                // Lower the volume if audio focus is lost temporarily but can continue playing
+                break;
+        }
+    }
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        Log.d("d", "On destroy called in main");
+        try {
+            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), this);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        mediaPlayerHelper.stopUpdatingCurrentTime();
+        audioManager.abandonAudioFocus(this);
+        if(MediaPlayerHelper.getMediaPlayer()  != null) {
+            MediaPlayerHelper.getMediaPlayer().release();
+        }
+        if(handler != null)
+        {
+            handler.removeCallbacks(updatePositionRunnable);
+        }
+
+        MediaPlayerHelper.release();
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
     }
 }
