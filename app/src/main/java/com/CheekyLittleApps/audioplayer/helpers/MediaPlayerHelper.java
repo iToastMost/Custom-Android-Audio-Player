@@ -4,6 +4,7 @@ import static androidx.core.app.ServiceCompat.startForeground;
 
 import android.app.Notification;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
@@ -66,15 +67,21 @@ public class MediaPlayerHelper
                     tvCurrentTime.setText(UIHelper.formatDuration(currentPosition));
                     seekBar.setProgress(currentPosition);
 
+
+
                     long currentTimeMillis = System.currentTimeMillis();
-                    if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL) {
-                        try {
+                    if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL)
+                    {
+                        try
+                        {
                             SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), mediaPlayer, activity);
                             lastSaveTime = currentTimeMillis;
-                        } catch (IOException e) {
+                        } catch (IOException e)
+                        {
                             throw new RuntimeException(e);
                         }
                     }
+
 
                     handler.postDelayed(this, 1000);
                 }
@@ -303,7 +310,9 @@ public class MediaPlayerHelper
 
         String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
 
-        notificationHelper.showNotification(title, artist, resized, isPlaying());
+        //Intent serviceIntent = new Intent(context, MediaPlayerService.class);
+        //context.startService(serviceIntent);
+        notificationHelper.updateNotification(title, artist, resized, isPlaying());
         if(duration != null )
         {
             long durationInMillis = Long.parseLong(duration);

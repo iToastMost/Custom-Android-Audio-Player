@@ -1,5 +1,6 @@
 package com.CheekyLittleApps.audioplayer.helpers;
 
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -56,7 +57,7 @@ public class MediaNotificationHelper
 
 
 
-    public void showNotification(String title, String artist, Bitmap albumArt, Boolean isPlaying)
+    public Notification showNotification(String title, String artist, Bitmap albumArt, Boolean isPlaying)
     {
         PendingIntent playPauseIntent = createPendingIntent("ACTION_PLAY_PAUSE");
         PendingIntent nextIntent = createPendingIntent("ACTION_NEXT");
@@ -106,9 +107,10 @@ public class MediaNotificationHelper
             //                                          int[] grantResults)
             // to handle the case where the user grants the permission. See the documentation
             // for ActivityCompat#requestPermissions for more details.
-            return;
+            return null;
         }
         notificationManager.notify(1, builder.build());
+        return builder.build();
     }
 
     public void updatePlaybackState(boolean isPlaying) {
@@ -133,7 +135,5 @@ public class MediaNotificationHelper
     public void clearNotification() {
         notificationManager.cancel(NOTIFICATION_ID);
     }
-
-
 
 }
