@@ -38,6 +38,8 @@ public class MediaPlayerService extends Service
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent.getAction();
+
+        startForeground(1, mediaNotificationHelper.showNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying()));
         if (action != null) {
             switch (action) {
                 case "ACTION_PLAY_PAUSE":
