@@ -57,7 +57,7 @@ public class MediaPlayerHelper
     public void startUpdatingCurrentTime(SeekBar seekBar, TextView tvCurrentTime, Uri mediaUri, MainActivity activity) {
         updatePositionRunnable = new Runnable() {
             private long lastSaveTime = 0;
-            private static final long SAVE_INTERVAL = 10000;
+            private static final long SAVE_INTERVAL = 30000;
 
             @Override
             public void run() {
@@ -69,7 +69,12 @@ public class MediaPlayerHelper
                     long currentTimeMillis = System.currentTimeMillis();
                     if (currentTimeMillis - lastSaveTime > SAVE_INTERVAL) {
                         try {
-                            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), mediaPlayer, activity);
+                            if(currentPosition > SharedPreferencesHelper.getSavedPlaybackPosition(activity, MediaPlayerHelper.getUri()))
+                            {
+                                //Log.d("d", "Shmaving shmrogress");
+                                SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), mediaPlayer, activity);
+                            }
+
                             lastSaveTime = currentTimeMillis;
                         } catch (IOException e) {
                             throw new RuntimeException(e);
