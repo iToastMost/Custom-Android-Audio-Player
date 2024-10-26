@@ -8,30 +8,46 @@ import android.net.Uri;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class SharedPreferencesHelper
 {
     private static final String PREFS_NAME = "your_prefs_name";
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     public static void savePlaybackPosition(Uri uri, MediaPlayer mediaPlayer, Context context) throws IOException {
-        if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)))
-        {
-            int currentPosition = mediaPlayer.getCurrentPosition();
-            String key = generateUniqueKey(uri);
 
-            SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_NAME, context.MODE_PRIVATE).edit();
-            editor.putInt(key, currentPosition);
-            editor.apply();
-        }
+        executorService.execute(() -> {
+            try {
+                if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)))
+                {
+                    int currentPosition = mediaPlayer.getCurrentPosition();
+                    String key = generateUniqueKey(uri);
+
+                    SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_NAME, context.MODE_PRIVATE).edit();
+                    editor.putInt(key, currentPosition);
+                    editor.apply();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
-    public static int getSavedPlaybackPosition(Context context, Uri uri) {
-        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String key = generateUniqueKey(uri);
-        return prefs.getInt(key, 0);
+    public static void getSavedPlaybackPosition(Context context, Uri uri, PlaybackPositionCallback callback) {
+        executorService.execute(() ->
+        {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String key = generateUniqueKey(uri);
+            int position = prefs.getInt(key, 0);
+            callback.onResult(position);
+        });
     }
 
     public static String getAudioType(Context context, Uri uri) throws IOException {
+
+
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         String audioType = "unknown";
 
@@ -65,5 +81,19 @@ public class SharedPreferencesHelper
 
     private static String generateUniqueKey(Uri uri) {
         return "audiobook_position_" + uri.toString().hashCode();
+    }
+
+    // Callback interfaces
+    public interface SaveCallback {
+        void onSuccess();
+        void onError(Exception e);
+    }
+
+    public interface PlaybackPositionCallback {
+        void onResult(int position);
+    }
+
+    public interface AudioTypeCallback {
+        void onResult(String audioType);
     }
 }

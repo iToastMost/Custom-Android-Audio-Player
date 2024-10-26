@@ -104,12 +104,6 @@ public class MainActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, MediaPlayerService.class);
         startService(serviceIntent);
 
-        boolean focusGranted = mediaPlayerHelper.requestAudioFocus();
-        if(focusGranted)
-        {
-            //handle audio
-        }
-
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
@@ -287,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
                         {
                             Uri uri = data.getData();
                             mediaUri = uri;
-                            MediaPlayerHelper.handleAudioFile(uri, spinnerPlaybackSpeed, btnPlay, sbTime, ivCover, tvTitle, tvArtist, tvSongLength, mediaUri, tvCurrentTime);
+                            MediaPlayerHelper.handleAudioFile(MainActivity.this, uri, spinnerPlaybackSpeed, btnPlay, sbTime, ivCover, tvTitle, tvArtist, tvSongLength, mediaUri, tvCurrentTime);
                         }
                     }
                 });
@@ -362,6 +356,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
     @Override
     protected void onDestroy()
