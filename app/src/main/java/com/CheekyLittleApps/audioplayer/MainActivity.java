@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
         neverShowAgain = prefs.getBoolean(KEY_NEVER_SHOW_AGAIN, false);
 
 
-
         mediaSession = new MediaSessionCompat(this, "MediaSessionTag");
         mediaPlayerHelper = new MediaPlayerHelper(this, mediaSession);
         notificationHelper = mediaPlayerHelper.getNotificationHelper();

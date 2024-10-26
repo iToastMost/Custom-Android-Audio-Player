@@ -323,11 +323,17 @@ public class MediaPlayerHelper
 
             currentTime = 0;
 
+            boolean focusGranted = requestAudioFocus();
+
+
             SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, new SharedPreferencesHelper.PlaybackPositionCallback() {
                 @Override
                 public void onResult(int position) {
-                    mediaPlayer.seekTo(position);
-                    mediaPlayer.start();
+                    if(focusGranted)
+                    {
+                        mediaPlayer.seekTo(position);
+                        mediaPlayer.start();
+                    }
                 }
             });
 
@@ -369,6 +375,20 @@ public class MediaPlayerHelper
             String title = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
             String artist = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
             String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+
+            if(retriever != null)
+            {
+                try
+                {
+                    retriever.release();
+                    retriever = null;
+                }catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+
+            }
+
             activity.runOnUiThread(() ->
             {
                 ivCover.setImageBitmap(albumArt);
@@ -401,19 +421,6 @@ public class MediaPlayerHelper
                 }
 
             });
-
-            if(retriever != null)
-            {
-                try
-                {
-                    retriever.release();
-                    retriever = null;
-                }catch (IOException e)
-                {
-                    e.printStackTrace();
-                }
-
-            }
 
         });
 

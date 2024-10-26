@@ -41,6 +41,7 @@ public class SharedPreferencesHelper
             SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             String key = generateUniqueKey(uri);
             int position = prefs.getInt(key, 0);
+            Log.d("SharedPreferences", "Generated key: " + key);
             callback.onResult(position);
         });
     }
