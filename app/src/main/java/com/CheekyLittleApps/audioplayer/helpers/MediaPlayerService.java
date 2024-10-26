@@ -37,30 +37,35 @@ public class MediaPlayerService extends Service
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        String action = intent.getAction();
 
-        startForeground(1, mediaNotificationHelper.showNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying()));
-        if (action != null) {
-            switch (action) {
-                case "ACTION_PLAY_PAUSE":
-                    MediaPlayerHelper.handlePlayButton();
-                    break;
-                case "ACTION_NEXT":
-                    try {
-                        MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                case "ACTION_PREVIOUS":
-                    try {
-                        MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    break;
+        if(intent != null && intent.getAction() != null)
+        {
+            String action = intent.getAction();
+
+            startForeground(1, mediaNotificationHelper.showNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying()));
+            if (action != null) {
+                switch (action) {
+                    case "ACTION_PLAY_PAUSE":
+                        MediaPlayerHelper.handlePlayButton();
+                        break;
+                    case "ACTION_NEXT":
+                        try {
+                            MediaPlayerHelper.handleButtonForward(MediaPlayerHelper.getUri());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        break;
+                    case "ACTION_PREVIOUS":
+                        try {
+                            MediaPlayerHelper.handleButtonBack(MediaPlayerHelper.getUri());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        break;
+                }
             }
         }
+
 
         return START_STICKY;
     }

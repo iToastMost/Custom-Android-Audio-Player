@@ -3,7 +3,6 @@ package com.CheekyLittleApps.audioplayer;
 import static com.CheekyLittleApps.audioplayer.helpers.UIHelper.showFileChooser;
 
 import android.app.Activity;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,7 +37,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.CheekyLittleApps.audioplayer.helpers.MediaNotificationHelper;
 import com.CheekyLittleApps.audioplayer.helpers.MediaPlayerHelper;
@@ -48,7 +46,7 @@ import com.CheekyLittleApps.audioplayer.helpers.UIHelper;
 
 import java.io.IOException;
 
-public class MainActivity extends AppCompatActivity implements AudioManager.OnAudioFocusChangeListener {
+public class MainActivity extends AppCompatActivity {
     private static final String PREFS_NAME = "AudioPlayerPrefs";
     private static final String KEY_POSITION = "audiobook_position";
 
@@ -97,14 +95,20 @@ public class MainActivity extends AppCompatActivity implements AudioManager.OnAu
         SharedPreferences prefs = getSharedPreferences(PREFS_APP, MODE_PRIVATE);
         neverShowAgain = prefs.getBoolean(KEY_NEVER_SHOW_AGAIN, false);
 
+
+
         mediaSession = new MediaSessionCompat(this, "MediaSessionTag");
         mediaPlayerHelper = new MediaPlayerHelper(this, mediaSession);
-        notificationHelper = new MediaNotificationHelper(this, mediaSession);
+        notificationHelper = mediaPlayerHelper.getNotificationHelper();
+
         Intent serviceIntent = new Intent(this, MediaPlayerService.class);
         startService(serviceIntent);
 
-        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        boolean focusGranted = mediaPlayerHelper.requestAudioFocus();
+        if(focusGranted)
+        {
+            //handle audio
+        }
 
         mediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
@@ -204,7 +208,6 @@ public class MainActivity extends AppCompatActivity implements AudioManager.OnAu
             btnPlay.setText(text);
         }
     }
-
 
 
     private void setupUIComponents()
@@ -360,34 +363,6 @@ public class MainActivity extends AppCompatActivity implements AudioManager.OnAu
         }
     }
 
-
-    public void requestAudioFocus() {
-        int result = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-
-        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-            // Start playback or do something when audio focus is granted
-        }
-    }
-
-    @Override
-    public void onAudioFocusChange(int focusChange) {
-        switch (focusChange) {
-            case AudioManager.AUDIOFOCUS_GAIN:
-                // Resume playback if audio focus is gained
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS:
-                // Stop playback if audio focus is lost
-                MediaPlayerHelper.handlePlayButton();
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                // Pause playback if audio focus is lost temporarily
-                MediaPlayerHelper.handlePlayButton();
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                // Lower the volume if audio focus is lost temporarily but can continue playing
-                break;
-        }
-    }
     @Override
     protected void onDestroy()
     {
@@ -400,7 +375,7 @@ public class MainActivity extends AppCompatActivity implements AudioManager.OnAu
         }
 
         mediaPlayerHelper.stopUpdatingCurrentTime();
-        audioManager.abandonAudioFocus(this);
+        //audioManager.abandonAudioFocus(this);
         if(MediaPlayerHelper.getMediaPlayer()  != null) {
             MediaPlayerHelper.getMediaPlayer().release();
         }

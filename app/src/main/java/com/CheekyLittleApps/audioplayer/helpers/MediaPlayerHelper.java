@@ -6,6 +6,9 @@ import android.app.Notification;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -29,6 +32,10 @@ import java.util.concurrent.Executors;
 public class MediaPlayerHelper
 {
 
+    private static AudioManager audioManager;
+    private static AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
+
+    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static MediaPlayer mediaPlayer;
     private static Handler handler;
     private static Runnable updatePositionRunnable;
@@ -41,7 +48,6 @@ public class MediaPlayerHelper
     private static String title;
     private static String artist;
     static Bitmap albumArt = null;
-    private static ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private static PowerManager.WakeLock wakeLock;
@@ -52,7 +58,59 @@ public class MediaPlayerHelper
         this.mediaPlayer = new MediaPlayer();
         this.currentUri = currentUri;
         notificationHelper = new MediaNotificationHelper(context, mediaSession);
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+        audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int focusChange) {
+                switch (focusChange) {
+                    case AudioManager.AUDIOFOCUS_GAIN:
+                        // Resume playback if paused or lower volume back to normal
+                        handlePlayButton();
+                        Log.d("MediaPlayerHelper", "Audio focus gained.");
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        // Stop playback and release resources
+                        handlePlayButton();
+                        Log.d("MediaPlayerHelper", "Audio focus lost.");
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                        // Pause playback temporarily
+                        handlePlayButton();
+                        Log.d("MediaPlayerHelper", "Audio focus lost transiently.");
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                        // Lower volume if applicable
+                        handlePlayButton();
+                        Log.d("MediaPlayerHelper", "Audio focus lost transiently with ducking.");
+                        break;
+                }
+            }
+        };
     }
+
+    // Request audio focus
+    public static boolean requestAudioFocus() {
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA) // For general media playback
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC) // Suitable for music or audiobooks
+                .build();
+
+        AudioFocusRequest audioFocusRequest = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            audioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(audioAttributes)
+                    .setOnAudioFocusChangeListener(audioFocusChangeListener)
+                    .build();
+        }
+
+        int result = 0;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            result = audioManager.requestAudioFocus(audioFocusRequest);
+        }
+        return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
+    }
+
 
     public void startUpdatingCurrentTime(SeekBar seekBar, TextView tvCurrentTime, Uri mediaUri, MainActivity activity) {
         updatePositionRunnable = new Runnable() {
@@ -61,6 +119,7 @@ public class MediaPlayerHelper
 
             @Override
             public void run() {
+
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     int currentPosition = mediaPlayer.getCurrentPosition();
                     tvCurrentTime.setText(UIHelper.formatDuration(currentPosition));
@@ -122,18 +181,22 @@ public class MediaPlayerHelper
         {
             mediaPlayer.pause();
             MainActivity.updatePlayButtonText("Play");
-            mainHandler.post(() -> MainActivity.updatePlayButtonText("Play"));
             handler.removeCallbacks(updatePositionRunnable);
             notificationHelper.updateNotification(title, artist, albumArt, false);
+            audioManager.abandonAudioFocus(audioFocusChangeListener);
             releaseWakeLock();
         }
         else
         {
-            mediaPlayer.start();
-            MainActivity.updatePlayButtonText("Pause");
-            handler.post(updatePositionRunnable);
-            notificationHelper.updateNotification(title, artist, albumArt, true);
-            acquireWakeLock();
+            boolean focusGranted = requestAudioFocus();
+            if(focusGranted)
+            {
+                mediaPlayer.start();
+                MainActivity.updatePlayButtonText("Pause");
+                handler.post(updatePositionRunnable);
+                notificationHelper.updateNotification(title, artist, albumArt, true);
+                acquireWakeLock();
+            }
         }
     }
 
@@ -336,7 +399,6 @@ public class MediaPlayerHelper
             }
 
         }
-
     }
 
     public static MediaPlayer getMediaPlayer()
@@ -362,6 +424,11 @@ public class MediaPlayerHelper
     public static Bitmap getAlbumArt()
     {
         return albumArt;
+    }
+
+    public static MediaNotificationHelper getNotificationHelper()
+    {
+        return notificationHelper;
     }
 
     public static boolean isPlaying() {
