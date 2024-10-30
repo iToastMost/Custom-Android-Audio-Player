@@ -325,17 +325,20 @@ public class MediaPlayerHelper
 
             boolean focusGranted = requestAudioFocus();
 
-
-            SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, new SharedPreferencesHelper.PlaybackPositionCallback() {
-                @Override
-                public void onResult(int position) {
-                    if(focusGranted)
-                    {
-                        mediaPlayer.seekTo(position);
-                        mediaPlayer.start();
+            executorService.execute(() ->
+            {
+                SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, new SharedPreferencesHelper.PlaybackPositionCallback() {
+                    @Override
+                    public void onResult(int position) {
+                        if(focusGranted)
+                        {
+                            mediaPlayer.seekTo(position);
+                            mediaPlayer.start();
+                        }
                     }
-                }
+                });
             });
+
 
             tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
 
@@ -397,10 +400,9 @@ public class MediaPlayerHelper
                 tvTitle.setText(title);
                 tvArtist.setText(artist);
 
-                Bitmap resized = null;
-                resized = resizeBitmap(albumArt, 256, 256);
 
-                notificationHelper.showNotification(title, artist, resized, isPlaying());
+
+
                 if(duration != null )
                 {
                     long durationInMillis = Long.parseLong(duration);
@@ -423,7 +425,10 @@ public class MediaPlayerHelper
             });
 
         });
-
+        //fix this not being on main thread and move back into ui thread later
+        Bitmap resized = null;
+        resized = resizeBitmap(albumArt, 256, 256);
+        notificationHelper.updateNotification(title, artist, resized, isPlaying());
 
     }
 

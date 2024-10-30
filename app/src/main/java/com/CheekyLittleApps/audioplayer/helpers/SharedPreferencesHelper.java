@@ -20,7 +20,7 @@ public class SharedPreferencesHelper
 
         executorService.execute(() -> {
             try {
-                if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)))
+                if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)) && mediaPlayer.getCurrentPosition() > 0 && uri != null)
                 {
                     int currentPosition = mediaPlayer.getCurrentPosition();
                     String key = generateUniqueKey(uri);

@@ -103,6 +103,11 @@ public class MediaPlayerService extends Service
     {
         super.onTaskRemoved(rootIntent);
         Log.d("d", "On task remove called MPS");
+        try {
+            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), this);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         mediaNotificationHelper.clearNotification();
         MediaPlayerHelper.release();
         stopSelf();
