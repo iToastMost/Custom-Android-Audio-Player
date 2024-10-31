@@ -91,7 +91,7 @@ public class MediaNotificationHelper
                 .addAction(previousAction)
                 .addAction(playPauseAction)
                 .addAction(nextAction)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(1)
                         .setMediaSession(mediaSession.getSessionToken()))

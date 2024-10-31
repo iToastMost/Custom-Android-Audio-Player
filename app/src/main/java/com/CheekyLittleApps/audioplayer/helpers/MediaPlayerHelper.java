@@ -400,7 +400,10 @@ public class MediaPlayerHelper
                 tvTitle.setText(title);
                 tvArtist.setText(artist);
 
-
+                //fix this not being on main thread and move back into ui thread later
+                Bitmap resized = null;
+                resized = resizeBitmap(albumArt, 256, 256);
+                notificationHelper.updateNotification(title, artist, resized, true);
 
 
                 if(duration != null )
@@ -425,10 +428,7 @@ public class MediaPlayerHelper
             });
 
         });
-        //fix this not being on main thread and move back into ui thread later
-        Bitmap resized = null;
-        resized = resizeBitmap(albumArt, 256, 256);
-        notificationHelper.updateNotification(title, artist, resized, isPlaying());
+
 
     }
 
