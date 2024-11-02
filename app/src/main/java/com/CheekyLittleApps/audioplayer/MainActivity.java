@@ -361,12 +361,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy()
     {
         super.onDestroy();
-        Log.d("d", "On destroy called in main");
-        try {
-            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), this);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+//        Log.d("d", "On destroy called in main");
+//        try {
+//            SharedPreferencesHelper.savePlaybackPosition(MediaPlayerHelper.getUri(), MediaPlayerHelper.getMediaPlayer(), this);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
         mediaPlayerHelper.stopUpdatingCurrentTime();
         //audioManager.abandonAudioFocus(this);

@@ -230,7 +230,7 @@ public class MediaPlayerHelper
 //            }
 
             handler.post(updatePositionRunnable);
-            notificationHelper.updateNotification(title, artist, albumArt, isPlaying());
+            notificationHelper.updateNotification(MediaPlayerHelper.getTitle(), MediaPlayerHelper.getArtist(), MediaPlayerHelper.getAlbumArt(), MediaPlayerHelper.isPlaying());
         });
 
     }
@@ -327,14 +327,16 @@ public class MediaPlayerHelper
 
             executorService.execute(() ->
             {
-                SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, new SharedPreferencesHelper.PlaybackPositionCallback() {
-                    @Override
-                    public void onResult(int position) {
-                        if(focusGranted)
-                        {
-                            mediaPlayer.seekTo(position);
-                            mediaPlayer.start();
-                        }
+                SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, position -> {
+
+                    if(focusGranted)
+                    {
+                        mediaPlayer.seekTo(position);
+                        mediaPlayer.start();
+                    }
+                    else
+                    {
+                        mediaPlayer.seekTo(position);
                     }
                 });
             });
@@ -400,7 +402,6 @@ public class MediaPlayerHelper
                 tvTitle.setText(title);
                 tvArtist.setText(artist);
 
-                //fix this not being on main thread and move back into ui thread later
                 Bitmap resized = null;
                 resized = resizeBitmap(albumArt, 256, 256);
                 notificationHelper.updateNotification(title, artist, resized, true);
@@ -498,7 +499,7 @@ public class MediaPlayerHelper
         }
 
         // Scale the bitmap to the new dimensions
-        return Bitmap.createScaledBitmap(originalImage, newWidth, newHeight, false);
+        return Bitmap.createScaledBitmap(originalImage, newWidth, newHeight, true);
     }
 
     private static void acquireWakeLock() {
@@ -524,6 +525,11 @@ public class MediaPlayerHelper
         {
             releaseWakeLock();
             wakeLock = null;
+        }
+
+        if(audioManager != null)
+        {
+            audioManager.abandonAudioFocus(audioFocusChangeListener);
         }
     }
 

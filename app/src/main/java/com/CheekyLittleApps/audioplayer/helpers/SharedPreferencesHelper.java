@@ -20,7 +20,7 @@ public class SharedPreferencesHelper
 
         executorService.execute(() -> {
             try {
-                if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)) && mediaPlayer.getCurrentPosition() > 0 && uri != null)
+                if(mediaPlayer != null && "audiobook".equals(getAudioType(context, uri)) && uri != null)
                 {
                     int currentPosition = mediaPlayer.getCurrentPosition();
                     String key = generateUniqueKey(uri);
@@ -29,7 +29,7 @@ public class SharedPreferencesHelper
                     editor.putInt(key, currentPosition);
                     editor.apply();
                 }
-            } catch (IOException e) {
+            } catch (IllegalStateException | IOException e) {
                 throw new RuntimeException(e);
             }
         });
