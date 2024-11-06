@@ -116,7 +116,7 @@ public class MediaPlayerHelper
     public void startUpdatingCurrentTime(SeekBar seekBar, TextView tvCurrentTime, Uri mediaUri, MainActivity activity) {
         updatePositionRunnable = new Runnable() {
             private long lastSaveTime = 0;
-            private static final long SAVE_INTERVAL = 30000;
+            private static final long SAVE_INTERVAL = 3000;
 
             @Override
             public void run() {
@@ -161,7 +161,6 @@ public class MediaPlayerHelper
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
                 handler.post(updatePositionRunnable);
             }
         });
@@ -325,21 +324,17 @@ public class MediaPlayerHelper
 
             boolean focusGranted = requestAudioFocus();
 
-            executorService.execute(() ->
-            {
+            //if having issues with getting saved position on load of audiobook try reinstating the set on prepared listener
+            //mediaPlayer.setOnPreparedListener(mp -> {
                 SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, position -> {
+                    mediaPlayer.seekTo(position);
 
                     if(focusGranted)
                     {
-                        mediaPlayer.seekTo(position);
                         mediaPlayer.start();
                     }
-                    else
-                    {
-                        mediaPlayer.seekTo(position);
-                    }
                 });
-            });
+           // });
 
 
             tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
