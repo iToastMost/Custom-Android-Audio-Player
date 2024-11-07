@@ -69,7 +69,7 @@ public class SharedPreferencesHelper
             if (durationMs > 60 * 60 * 1000) {
                 audioType = "audiobook";
             } else {
-                audioType = "song";
+                audioType = "audiobook";
             }
         } catch (Exception e) {
             e.printStackTrace();
