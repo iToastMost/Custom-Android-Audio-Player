@@ -318,14 +318,13 @@ public class MediaPlayerHelper
             mediaPlayer.reset();
             String playbackSpeed = spinnerPlaybackSpeed.getSelectedItem().toString();
             mediaPlayer.setDataSource(context, uri);
-            mediaPlayer.prepare();
 
             currentTime = 0;
 
             boolean focusGranted = requestAudioFocus();
 
-            //if having issues with getting saved position on load of audiobook try reinstating the set on prepared listener
-            //mediaPlayer.setOnPreparedListener(mp -> {
+            mediaPlayer.setOnPreparedListener(mp ->
+            {
                 SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, position -> {
                     mediaPlayer.seekTo(position);
 
@@ -334,15 +333,17 @@ public class MediaPlayerHelper
                         mediaPlayer.start();
                     }
                 });
-           // });
+                tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
+
+                handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
+                sbTime.setMax(mediaPlayer.getDuration());
+                btnPlay.setText("Pause");
+                handler.post(updatePositionRunnable);
+
+            });
+            mediaPlayer.prepareAsync();
 
 
-            tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
-
-            handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
-            sbTime.setMax(mediaPlayer.getDuration());
-            btnPlay.setText("Pause");
-            handler.post(updatePositionRunnable);
 
             //currentAudioType = SharedPreferencesHelper.getAudioType(context, mediaUri);
         }
