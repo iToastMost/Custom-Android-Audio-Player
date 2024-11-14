@@ -327,12 +327,13 @@ public class MediaPlayerHelper
             {
                 SharedPreferencesHelper.getSavedPlaybackPosition(context, uri, position -> {
                     mediaPlayer.seekTo(position);
-
-                    if(focusGranted)
-                    {
-                        mediaPlayer.start();
-                    }
                 });
+
+                if(focusGranted)
+                {
+                    mediaPlayer.start();
+                }
+
                 tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
 
                 handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
