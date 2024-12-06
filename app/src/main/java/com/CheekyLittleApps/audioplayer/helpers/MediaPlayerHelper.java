@@ -331,7 +331,7 @@ public class MediaPlayerHelper
 
                 if(focusGranted)
                 {
-                    mediaPlayer.start();
+                    handlePlayButton();
                 }
 
                 tvCurrentTime.setText(UIHelper.formatDuration(currentTime));
