@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -33,6 +34,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -64,7 +66,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Spinner spinnerPlaybackSpeed;
 
-    static Button btnPlay;
+    //static Button btnPlay;
+    static ImageButton btnPlay;
 
     TextView tvTitle;
     TextView tvArtist;
@@ -198,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static void updatePlayButtonText(String text) {
         if (btnPlay != null) {
-            btnPlay.setText(text);
+            //btnPlay.setText(text)
         }
     }
 
@@ -206,12 +209,15 @@ public class MainActivity extends AppCompatActivity {
     private void setupUIComponents()
     {
         Button btnFileSelect = findViewById(R.id.btnFileSelect);
-        Button btnBack = findViewById(R.id.btnBack);
-        Button btnForward = findViewById(R.id.btnForward);
+//        Button btnBack = findViewById(R.id.btnBack);
+//        Button btnForward = findViewById(R.id.btnForward);
+        ImageButton btnBack = findViewById(R.id.ibPrevious);
+        ImageButton btnForward = findViewById(R.id.ibNext);
 
         spinnerPlaybackSpeed = findViewById(R.id.spinnerPlaybackSpeed);
 
-        btnPlay = findViewById(R.id.btnWidgetPlay);
+        //btnPlay = findViewById(R.id.btnWidgetPlay);
+        btnPlay = findViewById(R.id.ibPlayPause);
 
         tvTitle = findViewById(R.id.tvTitle);
         tvArtist = findViewById(R.id.tvArtist);

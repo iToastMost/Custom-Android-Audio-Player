@@ -19,6 +19,7 @@ import android.os.PowerManager;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -309,7 +310,7 @@ public class MediaPlayerHelper
     }
 
 
-    public static void handleAudioFile(Activity activity, Uri uri, Spinner spinnerPlaybackSpeed, Button btnPlay, SeekBar sbTime, ImageView
+    public static void handleAudioFile(Activity activity, Uri uri, Spinner spinnerPlaybackSpeed, ImageButton btnPlay, SeekBar sbTime, ImageView
                                         ivCover, TextView tvTitle, TextView tvArtist, TextView tvSongLength, Uri mediaUri, TextView tvCurrentTime)
     {
         try
@@ -338,7 +339,7 @@ public class MediaPlayerHelper
 
                 handlePlayBackSpeedChange(playbackSpeed, mediaPlayer);
                 sbTime.setMax(mediaPlayer.getDuration());
-                btnPlay.setText("Pause");
+                //btnPlay.setImageIcon();
                 handler.post(updatePositionRunnable);
 
             });

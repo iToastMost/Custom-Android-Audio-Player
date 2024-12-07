@@ -7,34 +7,6 @@
     android:layout_height="match_parent"
     tools:context="com.CheekyLittleApps.audioplayer.MainActivity">
 
-    <Button
-        android:id="@+id/btnBack"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="16dp"
-        android:text="@string/back_button_text"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnWidgetPlay"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/play_button_text"
-        app:layout_constraintEnd_toStartOf="@+id/btnForward"
-        app:layout_constraintStart_toEndOf="@+id/btnBack"
-        app:layout_constraintTop_toTopOf="@+id/btnBack" />
-
-    <Button
-        android:id="@+id/btnForward"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="32dp"
-        android:text="@string/forward_button_text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/btnWidgetPlay" />
-
     <SeekBar
         android:id="@+id/sbTime"
         android:layout_width="376dp"
@@ -116,5 +88,39 @@
         app:layout_constraintHorizontal_bias="0.939"
         app:layout_constraintStart_toEndOf="@+id/tvArtist"
         app:layout_constraintTop_toBottomOf="@+id/ivCover" />
+
+    <ImageButton
+        android:id="@+id/ibPrevious"
+        android:layout_width="120dp"
+        android:layout_height="90dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="16dp"
+        android:backgroundTint="#673AB7"
+        android:contentDescription="Button_Rewind"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:srcCompat="@drawable/ic_skip_previous" />
+
+    <ImageButton
+        android:id="@+id/ibPlayPause"
+        android:layout_width="120dp"
+        android:layout_height="90dp"
+        android:backgroundTint="#673AB7"
+        android:contentDescription="Button_Play_Pause"
+        app:layout_constraintEnd_toStartOf="@+id/ibNext"
+        app:layout_constraintStart_toEndOf="@+id/ibPrevious"
+        app:layout_constraintTop_toTopOf="@+id/ibPrevious"
+        app:srcCompat="@drawable/ic_play_arrow" />
+
+    <ImageButton
+        android:id="@+id/ibNext"
+        android:layout_width="120dp"
+        android:layout_height="90dp"
+        android:layout_marginEnd="32dp"
+        android:backgroundTint="#673AB7"
+        android:contentDescription="Button_Forward"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ibPlayPause"
+        app:srcCompat="@drawable/ic_skip_next" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
