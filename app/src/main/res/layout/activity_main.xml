@@ -20,7 +20,7 @@
         android:id="@+id/ivCover"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="32dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/image_cover_text"
         android:maxWidth="400dp"
@@ -74,7 +74,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:backgroundTint="#673AB7"
         android:text="@string/select_file_text"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -92,55 +94,80 @@
 
     <ImageButton
         android:id="@+id/ibPrevious"
-        android:layout_width="120dp"
-        android:layout_height="90dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginBottom="16dp"
-        android:backgroundTint="#673AB7"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="#00673AB7"
         android:contentDescription="Button_Rewind"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:tint="#D5CECE"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toStartOf="@+id/ibPlayPause"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
         app:srcCompat="@drawable/ic_skip_previous" />
 
     <ImageButton
         android:id="@+id/ibPlayPause"
-        android:layout_width="120dp"
-        android:layout_height="90dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/custom_button1"
         android:backgroundTint="#673AB7"
         android:contentDescription="Button_Play_Pause"
         android:scaleType="fitCenter"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toStartOf="@+id/ibNext"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/ibPrevious"
-        app:layout_constraintTop_toTopOf="@+id/ibPrevious"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
         app:srcCompat="@drawable/ic_play_arrow"
-        app:tint="#000000" />
+        app:tint="#D5CECE" />
 
     <ImageButton
         android:id="@+id/ibNext"
-        android:layout_width="120dp"
-        android:layout_height="90dp"
-        android:layout_marginEnd="32dp"
-        android:backgroundTint="#673AB7"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:backgroundTint="#00673AB7"
         android:contentDescription="Button_Forward"
         android:scaleType="fitCenter"
+        app:layout_constraintBottom_toTopOf="@+id/guideline4"
+        app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/ibPlayPause"
+        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/ibPlayPause"
+        app:layout_constraintTop_toTopOf="@+id/guideline3"
         app:srcCompat="@drawable/ic_skip_next"
-        app:tint="#000000" />
+        app:tint="#D5CECE" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.2" />
+        app:layout_constraintGuide_percent="0.0" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.8" />
+        app:layout_constraintGuide_percent="1.0" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.84" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.96" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
