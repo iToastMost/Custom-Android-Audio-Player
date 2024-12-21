@@ -182,7 +182,7 @@ public class MediaPlayerHelper
         if(mediaPlayer.isPlaying())
         {
             mediaPlayer.pause();
-            MainActivity.updatePlayButtonText("Play");
+            MainActivity.updatePlayButtonText(true);
             handler.removeCallbacks(updatePositionRunnable);
             notificationHelper.updateNotification(title, artist, albumArt, false);
             audioManager.abandonAudioFocus(audioFocusChangeListener);
@@ -194,7 +194,7 @@ public class MediaPlayerHelper
             if(focusGranted)
             {
                 mediaPlayer.start();
-                MainActivity.updatePlayButtonText("Pause");
+                MainActivity.updatePlayButtonText(false);
                 handler.post(updatePositionRunnable);
                 notificationHelper.updateNotification(title, artist, albumArt, true);
                 acquireWakeLock();

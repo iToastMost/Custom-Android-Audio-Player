@@ -16,20 +16,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle" />
 
-    <ImageView
-        android:id="@+id/ivCover"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="32dp"
-        android:adjustViewBounds="true"
-        android:contentDescription="@string/image_cover_text"
-        android:maxWidth="400dp"
-        android:scaleType="centerCrop"
-        app:layout_constraintDimensionRatio="1:1"
-        app:layout_constraintEnd_toStartOf="@+id/guideline2"
-        app:layout_constraintStart_toStartOf="@+id/guideline"
-        app:layout_constraintTop_toBottomOf="@+id/btnFileSelect"
-        tools:srcCompat="@tools:sample/avatars" />
 
     <TextView
         android:id="@+id/tvTitle"
@@ -48,7 +34,7 @@
         android:layout_marginTop="16dp"
         android:text="@string/song_artist_text"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivCover" />
+        app:layout_constraintTop_toBottomOf="@+id/cView" />
 
     <TextView
         android:id="@+id/tvCurrentTime"
@@ -76,7 +62,7 @@
         android:layout_marginTop="16dp"
         android:backgroundTint="#673AB7"
         android:text="@string/select_file_text"
-        android:textColor="#D5CECE"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -90,7 +76,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.939"
         app:layout_constraintStart_toEndOf="@+id/tvArtist"
-        app:layout_constraintTop_toBottomOf="@+id/ivCover" />
+        app:layout_constraintTop_toBottomOf="@+id/cView" />
 
     <ImageButton
         android:id="@+id/ibPrevious"
@@ -147,14 +133,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.0" />
+        app:layout_constraintGuide_percent="0.02
+" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="1.0" />
+        app:layout_constraintGuide_percent="0.98
+" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
@@ -168,6 +156,28 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.96" />
+        app:layout_constraintGuide_percent="0.935" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="32dp"
+        app:cardCornerRadius="25dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toStartOf="@+id/guideline2"
+        app:layout_constraintStart_toStartOf="@+id/guideline"
+        app:layout_constraintTop_toBottomOf="@+id/btnFileSelect"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardElevation="0dp">
+
+        <ImageView
+            android:id="@+id/ivCover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/image_cover_text"
+            tools:srcCompat="@tools:sample/avatars" />
+    </androidx.cardview.widget.CardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

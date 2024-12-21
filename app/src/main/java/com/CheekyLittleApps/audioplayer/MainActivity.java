@@ -199,12 +199,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public static void updatePlayButtonText(String text) {
-        if (btnPlay != null) {
-            //btnPlay.setText(text)
+    public static void updatePlayButtonText(Boolean isPlaying) {
+        if (isPlaying) {
+            btnPlay.setImageResource(R.drawable.ic_play_arrow);
+        }
+        else
+        {
+            btnPlay.setImageResource(R.drawable.ic_pause);
         }
     }
-
 
     private void setupUIComponents()
     {
